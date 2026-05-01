@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Quality Audit — Predicting Irrigation Need</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; background: #f5f5f5; color: #222; }
+  .container { max-width: 960px; margin: 32px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,.08); padding: 40px; }
+  h1 { font-size: 1.8rem; margin-bottom: 4px; }
+  .meta { color: #666; font-size: 0.9rem; margin-bottom: 32px; }
+  h2 { font-size: 1.2rem; border-bottom: 2px solid #e0e0e0; padding-bottom: 6px; margin-top: 36px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-top: 12px; }
+  th { background: #f0f0f0; text-align: left; padding: 8px 10px; }
+  td { padding: 7px 10px; border-bottom: 1px solid #eee; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 600; }
+  .PASS     { background: #d4edda; color: #155724; }
+  .MEDIUM   { background: #fff3cd; color: #856404; }
+  .HIGH     { background: #f8d7da; color: #721c24; }
+  .CRITICAL { background: #dc3545; color: #fff; }
+  .NA       { background: #e2e3e5; color: #383d41; }
+  .score-card { display: flex; gap: 16px; flex-wrap: wrap; margin: 16px 0; }
+  .score-box { flex: 1; min-width: 140px; border-radius: 8px; padding: 16px 20px; text-align: center; }
+  .score-box h3 { margin: 0 0 6px 0; font-size: 0.82rem; text-transform: uppercase; letter-spacing: .05em; }
+  .score-box .score { font-size: 2rem; font-weight: 700; }
+  .green  { background: #d4edda; color: #155724; }
+  .yellow { background: #fff3cd; color: #856404; }
+  .red    { background: #f8d7da; color: #721c24; }
+  .gray   { background: #e2e3e5; color: #383d41; }
+  .finding { background: #fff8e1; border-left: 4px solid #f9a825; padding: 12px 16px; margin: 10px 0; border-radius: 4px; }
+  .finding strong { display: block; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Data Quality Audit Report</h1>
+  <div class="meta">
+    Dataset: <strong>data/train.csv</strong> &nbsp;|&nbsp;
+    Rows: <strong>630,000</strong> &nbsp;|&nbsp;
+    Columns: <strong>21</strong> &nbsp;|&nbsp;
+    Audit Date: <strong>2026-04-28</strong> &nbsp;|&nbsp;
+    Analyst: <strong>Pranay Agarwal</strong>
+  </div>
+
+  <h2>Overall Quality Scorecard</h2>
+  <div class="score-card">
+    <div class="score-box green">
+      <h3>Completeness</h3>
+      <div class="score">100</div>
+      <span class="badge PASS">PASS</span>
+    </div>
+    <div class="score-box green">
+      <h3>Uniqueness</h3>
+      <div class="score">100</div>
+      <span class="badge PASS">PASS</span>
+    </div>
+    <div class="score-box green">
+      <h3>Validity</h3>
+      <div class="score">100</div>
+      <span class="badge PASS">PASS</span>
+    </div>
+    <div class="score-box green">
+      <h3>Accuracy</h3>
+      <div class="score">100</div>
+      <span class="badge PASS">PASS</span>
+    </div>
+    <div class="score-box gray">
+      <h3>Freshness</h3>
+      <div class="score">N/A</div>
+      <span class="badge NA">STATIC FILE</span>
+    </div>
+    <div class="score-box green">
+      <h3>Overall</h3>
+      <div class="score">100</div>
+      <span class="badge PASS">PASS</span>
+    </div>
+  </div>
+
+  <div class="finding">
+    <strong>MEDIUM — Target Class Imbalance</strong>
+    "High" irrigation need class = 3.3% (21,009 / 630,000 rows). Not a data quality error, but a structural characteristic requiring modelling mitigation (class weights / SMOTE).
+  </div>
+
+  <h2>1. Completeness (Null Audit)</h2>
+  <table>
+    <tr><th>Result</th><th>Columns Checked</th><th>Null Cells</th><th>Severity</th></tr>
+    <tr><td>All 21 columns fully populated</td><td>21 / 21</td><td>0 / 13,230,000</td><td><span class="badge PASS">PASS</span></td></tr>
+  </table>
+  <p style="color:#555;font-size:.85rem;">No imputation required. All fields present for every record.</p>
+
+  <h2>2. Uniqueness (Duplicate Detection)</h2>
+  <table>
+    <tr><th>Check</th><th>Duplicates Found</th><th>Rate</th><th>Severity</th></tr>
+    <tr><td>Key duplicates (on <code>id</code>)</td><td>0</td><td>0.000%</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Full-row duplicates (excluding id)</td><td>0</td><td>0.000%</td><td><span class="badge PASS">PASS</span></td></tr>
+  </table>
+  <p style="color:#555;font-size:.85rem;">Each <code>id</code> is unique. No accidental pipeline fan-out or repeat records.</p>
+
+  <h2>3. Validity (Referential Integrity / Enum Sets)</h2>
+  <table>
+    <tr><th>Column</th><th>Allowed Values</th><th>Actual Distinct</th><th>Violations</th><th>Status</th></tr>
+    <tr><td>Soil_Type</td><td>4</td><td>4</td><td>0</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Crop_Type</td><td>6</td><td>6</td><td>0</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Crop_Growth_Stage</td><td>4</td><td>4</td><td>0</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Season</td><td>3</td><td>3</td><td>0</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Irrigation_Type</td><td>4</td><td>4</td><td>0</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Water_Source</td><td>4</td><td>4</td><td>0</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Mulching_Used</td><td>2</td><td>2</td><td>0</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Region</td><td>5</td><td>5</td><td>0</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Irrigation_Need</td><td>3</td><td>3</td><td>0</td><td><span class="badge PASS">PASS</span></td></tr>
+  </table>
+
+  <h2>4. Accuracy (Value Range Validation)</h2>
+  <table>
+    <tr><th>Column</th><th>Rule</th><th>Violations</th><th>Status</th></tr>
+    <tr><td>Soil_pH</td><td>pH scale 0–14</td><td>0</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Soil_pH</td><td>Agronomic pH 4–9</td><td>0</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Soil_Moisture</td><td>0–100%</td><td>0</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Organic_Carbon</td><td>0–10%</td><td>0</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Electrical_Conductivity</td><td>0–10 dS/m</td><td>0</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Temperature_C</td><td>-10 to 60°C</td><td>0</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Humidity</td><td>0–100%</td><td>0</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Rainfall_mm</td><td>0–5000 mm/yr</td><td>0</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Sunlight_Hours</td><td>0–24 hrs/day</td><td>0</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Wind_Speed_kmh</td><td>0–250 km/h</td><td>0</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Field_Area_hectare</td><td>0–1000 ha</td><td>0</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Previous_Irrigation_mm</td><td>0–1000 mm</td><td>0</td><td><span class="badge PASS">PASS</span></td></tr>
+  </table>
+
+  <h2>5. Freshness</h2>
+  <table>
+    <tr><th>Check</th><th>Result</th><th>Status</th></tr>
+    <tr><td>Datetime columns detected</td><td>None found</td><td><span class="badge NA">N/A</span></td></tr>
+    <tr><td>File age</td><td>5 days (last modified 2026-04-23)</td><td><span class="badge NA">N/A</span></td></tr>
+    <tr><td>SLA</td><td>Static Kaggle competition snapshot — no pipeline SLA</td><td><span class="badge NA">N/A</span></td></tr>
+  </table>
+
+  <h2>Notable Structural Findings (Non-Error)</h2>
+  <table>
+    <tr><th>Finding</th><th>Detail</th><th>Action Required</th><th>Severity</th></tr>
+    <tr>
+      <td>Target class imbalance</td>
+      <td>High = 3.3%, Medium = 37.9%, Low = 58.7%</td>
+      <td>Use class_weight="balanced" or SMOTE; evaluate with macro-F1</td>
+      <td><span class="badge MEDIUM">MEDIUM</span></td>
+    </tr>
+    <tr>
+      <td>Synthetic data signature</td>
+      <td>All numeric features uniform-distributed (kurtosis ~-1.2), all feature correlations |r| &lt; 0.05</td>
+      <td>Do not rely on correlation-based feature selection; interaction terms won't surface linearly</td>
+      <td><span class="badge MEDIUM">MEDIUM</span></td>
+    </tr>
+  </table>
+
+  <h2>Audit Sign-off</h2>
+  <table>
+    <tr><th>Dimension</th><th>Check</th><th>Score</th><th>Verdict</th></tr>
+    <tr><td>Completeness</td><td>0 nulls across 21 columns</td><td>100</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Uniqueness</td><td>0 key and 0 full-row duplicates</td><td>100</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Validity</td><td>All categoricals within allowed sets</td><td>100</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Accuracy</td><td>All numeric values within business rules</td><td>100</td><td><span class="badge PASS">PASS</span></td></tr>
+    <tr><td>Freshness</td><td>Static file — not applicable</td><td>N/A</td><td><span class="badge NA">N/A</span></td></tr>
+    <tr><td><strong>Overall</strong></td><td></td><td><strong>100</strong></td><td><span class="badge PASS">PASS — READY FOR MODELLING</span></td></tr>
+  </table>
+  <p style="color:#555;font-size:.85rem;margin-top:20px;">Dataset cleared for downstream use. Address class imbalance before training.</p>
+</div>
+</body>
+</html>
